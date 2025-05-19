@@ -1,9 +1,132 @@
-import React from "react";
-// Assumes Font Awesome and Tailwind CSS are included
+import React, { useState, useRef, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import landingbg from "../assets/images/landingbg.jpg";
+import jobsData from "../data/jobsData";
 
 const HomePage = () => {
+  const [analysis, setAnalysis] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const fileInputRef = useRef(null);
+  const navigate = useNavigate();
+
+  const handleFileChange = () => {
+    setError(null);
+  };
+
+  const handleResumeUpload = async () => {
+    if (!fileInputRef.current?.files?.length) {
+      setError("Please select a file to upload.");
+      return;
+    }
+
+    const file = fileInputRef.current.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+      setError("File size exceeds 5MB. Please upload a smaller file.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    setIsLoading(true);
+    setError(null);
+    setAnalysis(null);
+
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || "http://localhost:8000"}/analyze-resume`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to analyze resume.");
+      }
+
+      const result = await response.json();
+      setAnalysis(result);
+      fileInputRef.current.value = null;
+    } catch (err) {
+      setError(err.message || "An error occurred while analyzing the resume.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleApply = (job) => {
+    navigate("/apply", { state: { job } });
+  };
+
+  // Filter recommended jobs based on detected skills
+  const recommendedJobs = analysis
+    ? jobsData.filter((job) => job.skills.some((skill) => analysis.skills_found.includes(skill)))
+    : [];
+
+  // Memoize static data
+  const features = useMemo(
+    () => [
+      { icon: "fas fa-bell", title: "Smart Job Alerts", desc: "AI-driven notifications for jobs matching your skills." },
+      { icon: "fas fa-file-alt", title: "Resume Wizard", desc: "Build, optimize, and share resumes with one click." },
+      { icon: "fas fa-user-shield", title: "Verified Employers", desc: "Connect with trusted, vetted companies only." },
+      { icon: "fas fa-robot", title: "AI Job Matching", desc: "Precision matching with our advanced algorithms." },
+      { icon: "fas fa-lightbulb", title: "Career Insights", desc: "Access blogs, salary data, and skill courses." },
+      { icon: "fas fa-headset", title: "24/7 Live Support", desc: "Chat with experts anytime, anywhere." },
+      { icon: "fas fa-video", title: "Video Interviews", desc: "Schedule and join interviews directly on-platform." },
+      { icon: "fas fa-globe", title: "Global Opportunities", desc: "Explore jobs worldwide with remote filters." },
+    ],
+    []
+  );
+
+  const stats = useMemo(
+    () => [
+      { stat: "15,000+", label: "Jobs Posted Monthly", icon: "fas fa-briefcase" },
+      { stat: "7,500+", label: "Active Employers", icon: "fas fa-building" },
+      { stat: "2M+", label: "Successful Hires", icon: "fas fa-users" },
+    ],
+    []
+  );
+
+  const categories = useMemo(
+    () => [
+      { href: "/jobs/tech", icon: "fas fa-code", title: "Tech & Development" },
+      { href: "/jobs/creative", icon: "fas fa-paint-brush", title: "Creative Arts" },
+      { href: "/jobs/business", icon: "fas fa-chart-line", title: "Business & Marketing" },
+      { href: "/jobs/health", icon: "fas fa-heartbeat", title: "Healthcare" },
+    ],
+    []
+  );
+
+  const timeline = useMemo(
+    () => [
+      { icon: "fas fa-user-plus", step: "1. Sign Up", desc: "Create your profile in minutes." },
+      { icon: "fas fa-tools", step: "2. Build Your Resume", desc: "Use our AI tools to stand out." },
+      { icon: "fas fa-search", step: "3. Find Jobs", desc: "Search or let AI match you." },
+      { icon: "fas fa-handshake", step: "4. Get Hired", desc: "Apply and connect with employers." },
+    ],
+    []
+  );
+
+  const companies = useMemo(
+    () => ["company-logo1.png", "company-logo2.png", "company-logo3.png", "company-logo4.png", "company-logo5.png", "company-logo6.png"],
+    []
+  );
+
+  const testimonials = useMemo(
+    () => [
+      { img: "user1.jpg", quote: "Landed my dream job in just 2 weeks!", name: "Sarah K.", role: "Software Engineer" },
+      { img: "user2.jpg", quote: "The AI matching is a game-changer!", name: "John D.", role: "Marketing Lead" },
+      { img: "user3.jpg", quote: "Best career move I ever made.", name: "Emily R.", role: "UX Designer" },
+    ],
+    []
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 text-gray-900 font-['Inter',sans-serif]">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 text-gray-900 font-['Inter',sans-serif]"
+         style={{
+           backgroundImage:`url(${landingbg})`,
+           backgroundSize: 'contain',
+         }}>
       {/* Hero Section with Video Background */}
       <section className="relative flex flex-col items-center justify-center min-h-screen text-black py-16 px-4 sm:px-6 lg:px-16 overflow-hidden">
         <video
@@ -42,12 +165,90 @@ const HomePage = () => {
               Find Jobs
             </button>
           </form>
-          <p className="mt-10 text-1xl opacity-75">Try our AI Job Match - Upload your resume below!</p>
-          <input
-            type="file"
-            accept=".pdf,.doc,.docx"
-            className="mt-6 text-sm text-gray-200 file:mr-4 file:py-4 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700"
-          />
+          <p className="mt-10 text-lg md:text-xl font-medium opacity-80 tracking-wide">
+            Unlock Your Potential with AI Job Match - Upload Your Resume!
+          </p>
+          <div className="mt-6 flex flex-col items-center gap-4">
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx"
+              id="resume-upload"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="text-sm text-black-200 file:mr-4 file:py-3 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700 focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all duration-300"
+              aria-label="Upload resume for AI job match"
+            />
+            <button
+              type="button"
+              className="px-8 mt-10 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-purple-400 transform hover:scale-105 transition-all duration-300 shadow-md disabled:bg-gradient-to-r disabled:from-purple-400 disabled:to-indigo-400 disabled:cursor-not-allowed"
+              onClick={handleResumeUpload}
+              disabled={isLoading}
+              aria-label="Analyze resume with AI"
+            >
+              {isLoading ? (
+                <span className="flex items-center">
+                  <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                  </svg>
+                  Analyzing...
+                </span>
+              ) : (
+                "Analyze Resume"
+              )}
+            </button>
+          </div>
+          {error && (
+            <div className="mt-6 p-4 bg-red-100 text-red-800 rounded-lg shadow max-w-2xl mx-auto" role="alert">
+              <p className="font-medium">Error: {error}</p>
+            </div>
+          )}
+          {analysis && (
+            <div className="mt-8 p-6 bg-white/90 rounded-xl shadow-lg max-w-2xl mx-auto">
+              <h3 className="font-bold text-purple-700 text-lg mb-3">AI Analysis Result:</h3>
+              <p className="text-gray-800 leading-relaxed">
+                <strong>Score:</strong> {analysis.score}/100
+              </p>
+              <p className="text-gray-800 leading-relaxed">
+                <strong>Skills Detected:</strong> {analysis.skills_found.join(", ") || "None"}
+              </p>
+              {analysis.suggestions.length > 0 && (
+                <div className="mt-4">
+                  <strong>Suggestions:</strong>
+                  <ul className="list-disc list-inside text-gray-800">
+                    {analysis.suggestions.map((suggestion, index) => (
+                      <li key={index}>{suggestion}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {recommendedJobs.length > 0 && (
+                <div className="mt-6">
+                  <h3 className="font-bold text-purple-700 text-lg mb-3">Recommended Jobs:</h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    {recommendedJobs.map((job) => (
+                      <div
+                        key={job.id}
+                        className="p-5 bg-white rounded-lg shadow-md transform hover:scale-105 transition-all duration-300"
+                      >
+                        <h4 className="text-lg font-semibold text-purple-600 mb-2">{job.title}</h4>
+                        <p className="text-gray-800"><strong>Company:</strong> {job.company}</p>
+                        <p className="text-gray-800"><strong>Location:</strong> {job.location}</p>
+                        <p className="text-gray-800"><strong>Type:</strong> {job.type}</p>
+                        <button
+                          onClick={() => handleApply(job)}
+                          className="mt-4 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-purple-400 transform hover:scale-105 transition-all duration-300"
+                          aria-label={`Apply for ${job.title} at ${job.company}`}
+                        >
+                          Apply Now
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </section>
 
@@ -55,16 +256,7 @@ const HomePage = () => {
       <section className="py-16 px-6 sm:px-12 lg:px-16 text-center bg-white shadow-inner">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-12">Why Hire Hub Stands Out</h2>
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {[
-            { icon: "fas fa-bell", title: "Smart Job Alerts", desc: "AI-driven notifications for jobs matching your skills." },
-            { icon: "fas fa-file-alt", title: "Resume Wizard", desc: "Build, optimize, and share resumes with one click." },
-            { icon: "fas fa-user-shield", title: "Verified Employers", desc: "Connect with trusted, vetted companies only." },
-            { icon: "fas fa-robot", title: "AI Job Matching", desc: "Precision matching with our advanced algorithms." },
-            { icon: "fas fa-lightbulb", title: "Career Insights", desc: "Access blogs, salary data, and skill courses." },
-            { icon: "fas fa-headset", title: "24/7 Live Support", desc: "Chat with experts anytime, anywhere." },
-            { icon: "fas fa-video", title: "Video Interviews", desc: "Schedule and join interviews directly on-platform." },
-            { icon: "fas fa-globe", title: "Global Opportunities", desc: "Explore jobs worldwide with remote filters." },
-          ].map((feature, index) => (
+          {features.map((feature, index) => (
             <div
               key={index}
               className="p-6 bg-gray-50 rounded-lg shadow-md transform hover:scale-105 hover:shadow-lg transition duration-300 text-center"
@@ -81,11 +273,7 @@ const HomePage = () => {
       <section className="py-16 px-6 sm:px-12 lg:px-16 text-center bg-gradient-to-r from-purple-50 to-indigo-50 shadow-lg">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-800">Our Impact</h2>
         <div className="mt-8 max-w-5xl mx-auto flex flex-col md:flex-row justify-center gap-12">
-          {[
-            { stat: "15,000+", label: "Jobs Posted Monthly", icon: "fas fa-briefcase" },
-            { stat: "7,500+", label: "Active Employers", icon: "fas fa-building" },
-            { stat: "2M+", label: "Successful Hires", icon: "fas fa-users" },
-          ].map((item, index) => (
+          {stats.map((item, index) => (
             <div key={index} className="transform hover:scale-110 transition-all duration-300">
               <i className={`${item.icon} text-3xl text-purple-600 mb-2`}></i>
               <p className="text-4xl font-extrabold text-purple-600 animate-count-up">{item.stat}</p>
@@ -104,12 +292,7 @@ const HomePage = () => {
           <button className="px-4 py-2 bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200">Freelance</button>
         </div>
         <div className="mt-8 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {[
-            { href: "/jobs/tech", icon: "fas fa-code", title: "Tech & Development" },
-            { href: "/jobs/creative", icon: "fas fa-paint-brush", title: "Creative Arts" },
-            { href: "/jobs/business", icon: "fas fa-chart-line", title: "Business & Marketing" },
-            { href: "/jobs/health", icon: "fas fa-heartbeat", title: "Healthcare" },
-          ].map((category, index) => (
+          {categories.map((category, index) => (
             <a
               key={index}
               href={category.href}
@@ -127,12 +310,7 @@ const HomePage = () => {
         <h2 className="text-3xl md:text-4xl font-bold text-gray-800">Your Journey with Us</h2>
         <div className="mt-12 relative max-w-4xl mx-auto">
           <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-purple-200 hidden md:block"></div>
-          {[
-            { icon: "fas fa-user-plus", step: "1. Sign Up", desc: "Create your profile in minutes." },
-            { icon: "fas fa-tools", step: "2. Build Your Resume", desc: "Use our AI tools to stand out." },
-            { icon: "fas fa-search", step: "3. Find Jobs", desc: "Search or let AI match you." },
-            { icon: "fas fa-handshake", step: "4. Get Hired", desc: "Apply and connect with employers." },
-          ].map((step, index) => (
+          {timeline.map((step, index) => (
             <div
               key={index}
               className={`flex flex-col md:flex-row items-center mb-12 ${index % 2 === 0 ? "md:justify-start" : "md:justify-end"}`}
@@ -155,7 +333,7 @@ const HomePage = () => {
       <section className="py-16 px-6 sm:px-12 lg:px-16 text-center bg-gray-50">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-800">Featured Employers</h2>
         <div className="mt-8 max-w-5xl mx-auto flex overflow-x-auto space-x-12 pb-4 snap-x snap-mandatory">
-          {["company-logo1.png", "company-logo2.png", "company-logo3.png", "company-logo4.png","company-logo5.png","company-logo6.png"].map((src, index) => (
+          {companies.map((src, index) => (
             <a
               key={index}
               href={`/company/${index + 1}`}
@@ -176,11 +354,7 @@ const HomePage = () => {
       <section className="bg-white py-16 px-6 sm:px-12 lg:px-16 text-center">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-800">Success Stories</h2>
         <div className="mt-8 max-w-5xl mx-auto flex overflow-x-auto space-x-6 pb-4 snap-x snap-mandatory">
-          {[
-            { img: "user1.jpg", quote: "Landed my dream job in just 2 weeks!", name: "Sarah K.", role: "Software Engineer" },
-            { img: "user2.jpg", quote: "The AI matching is a game-changer!", name: "John D.", role: "Marketing Lead" },
-            { img: "user3.jpg", quote: "Best career move I ever made.", name: "Emily R.", role: "UX Designer" },
-          ].map((testimonial, index) => (
+          {testimonials.map((testimonial, index) => (
             <div
               key={index}
               className="flex-shrink-0 snap-center p-6 bg-gray-100 rounded-xl shadow-lg w-80 text-center transform hover:scale-105 transition-all duration-300"

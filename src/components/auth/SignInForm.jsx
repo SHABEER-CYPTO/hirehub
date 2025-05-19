@@ -1,13 +1,19 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import "@fontsource/league-spartan";
-import bgImage from "../../assets/images/bgImage.jpg"; // Or use a gradient if you prefer
+import { useAuth } from "./AuthContext"; // Adjust path as needed
+import bgImage from "../../assets/images/bgImage.jpg";
 
 const SignInForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
+  const [serverError, setServerError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const validate = () => {
     const errors = {};
@@ -21,22 +27,48 @@ const SignInForm = () => {
     return errors;
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setServerError("");
+    setSuccessMessage("");
     const validationErrors = validate();
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length === 0) {
-      console.log("Logging in with:", { email, password });
-      setEmail("");
-      setPassword("");
-      alert("Login Successful!");
+      setLoading(true);
+      try {
+        const result = await login({ email, password }); // Expects { success, user }
+        setLoading(false);
+
+        if (result.success) {
+          const role = result.user?.role;
+          setSuccessMessage("Login successful! Redirecting...");
+
+          setTimeout(() => {
+            if (role === "admin") {
+              navigate("/admin-dashboard", { replace: true });
+            } else if (role === "employer") {
+              navigate("/employer-dashboard", { replace: true });
+            } else if (role === "jobseeker") {
+              navigate("/dashboard", { replace: true });
+            } else {
+              navigate("/", { replace: true }); // fallback route
+            }
+          }, 1500);
+        } else {
+          setServerError(result.message || "Login failed.");
+        }
+      } catch (error) {
+        console.error("Login error:", error);
+        setServerError("An unexpected error occurred. Please try again.");
+        setLoading(false);
+      }
     }
   };
 
   return (
     <div className="flex h-screen w-full font-sans">
-      {/* Left - Sign In Form */}
+      {/* Left - Login Form */}
       <div className="w-1/2 flex flex-col justify-center items-center px-8 bg-white">
         <div className="w-full max-w-md">
           <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Sign In</h2>
@@ -48,9 +80,10 @@ const SignInForm = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                disabled={loading}
               />
               {errors.email && (
-                <div className="text-red-500 text-sm mt-1 text-left">{errors.email}</div>
+                <div className="text-red-500 text-sm mt-1">{errors.email}</div>
               )}
             </div>
             <div>
@@ -60,21 +93,38 @@ const SignInForm = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                disabled={loading}
               />
               {errors.password && (
-                <div className="text-red-500 text-sm mt-1 text-left">{errors.password}</div>
+                <div className="text-red-500 text-sm mt-1">{errors.password}</div>
               )}
             </div>
+
+            {serverError && (
+              <div className="text-red-600 text-sm mt-2 bg-red-100 p-2 rounded">
+                {serverError}
+              </div>
+            )}
+
+            {successMessage && (
+              <div className="text-green-600 text-sm mt-2 bg-green-100 p-2 rounded">
+                {successMessage}
+              </div>
+            )}
+
             <button
               type="submit"
-              className="mt-4 w-full py-3 bg-gradient-to-r from-purple-700 to-indigo-600 text-white rounded font-bold transition-transform duration-300 hover:scale-105"
+              disabled={loading}
+              className={`mt-4 w-full py-3 bg-gradient-to-r from-purple-700 to-indigo-600 text-white rounded font-bold transition-transform duration-300 hover:scale-105 ${
+                loading ? "opacity-60 cursor-not-allowed" : ""
+              }`}
             >
-              Sign In
+              {loading ? "Signing In..." : "Sign In"}
             </button>
           </form>
           <p className="mt-4 text-center text-gray-600">
-            Don't have an account?{" "}
-            <Link to="/signup" className="text-indigo-600 hover:underline">
+            Don’t have an account?{" "}
+            <Link to="/register" className="text-indigo-600 hover:underline">
               Sign Up
             </Link>
           </p>
@@ -82,17 +132,15 @@ const SignInForm = () => {
             to="/"
             className="text-gray-500 no-underline text-xs mt-2 inline-block text-center"
           >
-            ← Back to Dashboard
+            ← Back to Home
           </Link>
         </div>
       </div>
 
-      {/* Right - Background + Title */}
+      {/* Right - Image + Branding */}
       <div
         className="w-1/2 h-full flex flex-col justify-center items-center bg-cover bg-center px-4 text-center"
-        style={{
-          backgroundImage: `url(${bgImage})`,
-        }}
+        style={{ backgroundImage: `url(${bgImage})` }}
       >
         <motion.h1
           initial={{ opacity: 0, y: -20 }}

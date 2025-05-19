@@ -1,90 +1,142 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
 
-const Jobs = () => {
-  const [jobs, setJobs] = useState([]);
-  const navigate = useNavigate();
+const PostJob = () => {
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    salary: "",
+    experience: "",
+    location: "",
+    type: "full-time",
+  });
 
-  useEffect(() => {
-    setTimeout(() => {
-      setJobs([
-        { id: 1, title: "Frontend Developer", company: "Tech Corp", location: "Remote", type: "Full-time" },
-        { id: 2, title: "Backend Developer", company: "Soft Solutions", location: "Bangalore", type: "Part-time" },
-        { id: 3, title: "UI/UX Designer", company: "Creative Agency", location: "Kochin", type: "Contract" },
-        { id: 4, title: "Accountant", company: "A1 Agency", location: "Banglore", type: "Full-time" },
-        { id: 5, title: "Devops Engineer", company: "Service Solution", location: "Banglore", type: "Full-time" },
-        { id: 6, title: "AI/ML Engineer", company: "IBM", location: "Banglore", type: "Full-time" },
-      ]);
-    }, 1000);
-  }, []);
+  const [successMsg, setSuccessMsg] = useState("");
 
-  const handleApply = (job) => {
-    navigate("/apply", { state: { job } });
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    // TODO: Send data to backend API
+    console.log("Submitting Job:", formData);
+    setSuccessMsg("Job posted successfully!");
+    setFormData({
+      title: "",
+      description: "",
+      salary: "",
+      experience: "",
+      location: "",
+      type: "full-time",
+    });
+
+    // clear success message after 3s
+    setTimeout(() => setSuccessMsg(""), 3000);
   };
 
   return (
-    <div style={{ padding: "20px", width: "100%", boxSizing: "border-box" }}> {/* Added boxSizing */}
-      <h1 style={styles.heading}>Job Listings</h1>
-      <button 
-        style={styles.postJobButton} 
-        onClick={() => navigate("/post-job")}
+    <div className="ml-[250px] p-6 font-sans">
+      <h1 className="text-2xl font-bold mb-4">📢 Post a New Job</h1>
+
+      {successMsg && (
+        <div className="bg-green-100 text-green-700 px-4 py-2 rounded-md mb-4">
+          {successMsg}
+        </div>
+      )}
+
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white shadow-md rounded-lg p-6 space-y-4 w-full max-w-2xl"
       >
-        ➕ Post a Job
-      </button>
-      <p style={styles.subText}>Find your next opportunity below:</p>
-      <div style={styles.jobList}>
-        {jobs.length === 0 ? (
-          <p style={styles.loadingText}>Loading jobs...</p>
-        ) : (
-          jobs.map((job) => (
-            <div key={job.id} style={styles.jobCard}>
-              <h3 style={styles.jobTitle}>{job.title}</h3>
-              <p><strong>Company:</strong> {job.company}</p>
-              <p><strong>Location:</strong> {job.location}</p>
-              <p><strong>Type:</strong> {job.type}</p>
-              <button 
-                style={styles.applyButton} 
-                onClick={() => handleApply(job)}
-              >
-                Apply Now
-              </button>
-            </div>
-          ))
-        )}
-      </div>
+        <div>
+          <label className="block mb-1 font-medium">Job Title</label>
+          <input
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            required
+            className="w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+
+        <div>
+          <label className="block mb-1 font-medium">Job Description</label>
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            required
+            rows="4"
+            className="w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block mb-1 font-medium">Salary (₹)</label>
+            <input
+              type="number"
+              name="salary"
+              value={formData.salary}
+              onChange={handleChange}
+              required
+              className="w-full border px-4 py-2 rounded"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium">Experience (Years)</label>
+            <input
+              type="number"
+              name="experience"
+              value={formData.experience}
+              onChange={handleChange}
+              required
+              className="w-full border px-4 py-2 rounded"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium">Location</label>
+            <input
+              name="location"
+              value={formData.location}
+              onChange={handleChange}
+              required
+              className="w-full border px-4 py-2 rounded"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium">Job Type</label>
+            <select
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              className="w-full border px-4 py-2 rounded"
+            >
+              <option value="full-time">Full-time</option>
+              <option value="part-time">Part-time</option>
+              <option value="internship">Internship</option>
+              <option value="contract">Contract</option>
+              <option value="remote">Remote</option>
+            </select>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          className="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition"
+        >
+          Post Job
+        </button>
+      </form>
     </div>
   );
 };
 
-const styles = {
-  heading: { fontSize: "28px", fontWeight: "bold", color: "#333", marginBottom: "10px" },
-  postJobButton: { backgroundColor: "#7c3aed", color: "#fff", padding: "10px", border: "none", borderRadius: "5px", cursor: "pointer", marginBottom: "20px" },
-  subText: { fontSize: "16px", color: "#666", marginBottom: "20px" },
-  jobList: { 
-    display: "grid", 
-    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", 
-    gap: "20px",
-    maxWidth: "1200px", // Optional: Limit the max width for better readability
-    margin: "0 auto", // Center the grid
-  },
-  jobCard: { 
-    backgroundColor: "#fff", 
-    padding: "20px", 
-    borderRadius: "10px", 
-    boxShadow: "0 4px 8px rgba(146, 60, 239, 0.23)",
-    boxSizing: "border-box", // Ensure padding doesn't affect width
-  },
-  jobTitle: { fontSize: "20px", fontWeight: "bold", color: "#7c3aed", marginBottom: "10px" },
-  applyButton: { 
-    backgroundColor: "#7c3aed", 
-    color: "#fff", 
-    padding: "10px 15px", 
-    border: "none", 
-    borderRadius: "5px", 
-    cursor: "pointer", 
-    marginTop: "10px" 
-  },
-  loadingText: { fontSize: "18px", color: "#888" },
-};
-
-export default Jobs;
+export default PostJob;

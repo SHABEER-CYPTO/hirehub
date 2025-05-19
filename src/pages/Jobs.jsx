@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import jobsData from "../data/jobsData";
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
@@ -7,14 +8,7 @@ const Jobs = () => {
 
   useEffect(() => {
     setTimeout(() => {
-      setJobs([
-        { id: 1, title: "Frontend Developer", company: "Tech Corp", location: "Remote", type: "Full-time" },
-        { id: 2, title: "Backend Developer", company: "Soft Solutions", location: "Bangalore", type: "Part-time" },
-        { id: 3, title: "UI/UX Designer", company: "Creative Agency", location: "Kochin", type: "Contract" },
-        { id: 4, title: "Accountant", company: "A1 Agency", location: "Banglore", type: "Full-time" },
-        { id: 5, title: "Devops Engineer", company: "Service Solution", location: "Banglore", type: "Full-time" },
-        { id: 6, title: "AI/ML Engineer", company: "IBM", location: "Banglore", type: "Full-time" },
-      ]);
+      setJobs(jobsData);
     }, 1000);
   }, []);
 
@@ -28,6 +22,7 @@ const Jobs = () => {
       <button
         onClick={() => navigate("/post-job")}
         className="bg-violet-600 text-white px-4 py-2 rounded mb-6 hover:bg-violet-700"
+        aria-label="Post a new job"
       >
         ➕ Post a Job
       </button>
@@ -46,6 +41,7 @@ const Jobs = () => {
               <button
                 onClick={() => handleApply(job)}
                 className="bg-violet-600 text-white px-4 py-2 mt-4 rounded hover:bg-violet-700"
+                aria-label={`Apply for ${job.title} at ${job.company}`}
               >
                 Apply Now
               </button>

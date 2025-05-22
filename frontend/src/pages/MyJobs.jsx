@@ -1,44 +1,60 @@
 import React, { useState, useEffect } from "react";
 import { Pencil, Trash2, Eye } from "lucide-react";
-
-const mockJobs = [
-  {
-    id: 1,
-    title: "Frontend Developer",
-    type: "Full-time",
-    location: "Remote",
-    salary: "8,00,000",
-    experience: "2 years",
-  },
-  {
-    id: 2,
-    title: "Backend Engineer",
-    type: "Part-time",
-    location: "Bangalore",
-    salary: "6,50,000",
-    experience: "1 year",
-  },
-];
+import { useAuth } from "../components/auth/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const MyJobs = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  // Fetch jobs on mount
   useEffect(() => {
-    // TODO: Replace with real API call
-    setJobs(mockJobs);
-  }, []);
+    if (!user || user.role !== "employer") return;
 
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this job?")) {
-      setJobs(jobs.filter((job) => job.id !== id));
+    const fetchJobs = async () => {
+      try {
+        const response = await fetch(`http://localhost:8000/api/jobs?employer_id=${user.id}`);
+        const data = await response.json();
+        setJobs(data);
+      } catch (error) {
+        console.error("Error fetching jobs:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
+  }, [user]);
+
+  // Handle delete
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this job?")) return;
+
+    try {
+      const response = await fetch(`http://localhost:8000/api/jobs/${id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setJobs((prevJobs) => prevJobs.filter((job) => job.id !== id));
+      } else {
+        alert("Failed to delete job.");
+      }
+    } catch (error) {
+      console.error("Delete failed:", error);
     }
   };
 
+  // UI
   return (
     <div className="ml-[250px] p-6 font-sans">
       <h1 className="text-2xl font-bold mb-4">📄 My Job Listings</h1>
 
-      {jobs.length === 0 ? (
+      {loading ? (
+        <p>Loading...</p>
+      ) : jobs.length === 0 ? (
         <p className="text-gray-600">You haven’t posted any jobs yet.</p>
       ) : (
         <div className="space-y-4">
@@ -50,7 +66,7 @@ const MyJobs = () => {
               <div>
                 <h2 className="text-lg font-semibold">{job.title}</h2>
                 <p className="text-sm text-gray-600">
-                  {job.type} | {job.location} | {job.experience} | ₹{job.salary}
+                  {job.type} | {job.location} | {job.experience} yrs | ₹{job.salary}
                 </p>
               </div>
               <div className="flex gap-3">
@@ -62,6 +78,7 @@ const MyJobs = () => {
                 </button>
                 <button
                   title="Edit"
+                  onClick={() => navigate(`/edit-job/${job.id}`)}
                   className="text-yellow-600 hover:text-yellow-700"
                 >
                   <Pencil size={18} />

@@ -1,6 +1,4 @@
-# 1. Top-level imports
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from typing import List
 import pdfplumber, docx, tempfile, os, spacy, logging, re
 from magic import Magic
@@ -11,23 +9,16 @@ import asyncio
 from spacy.matcher import PhraseMatcher
 from sentence_transformers import SentenceTransformer, util
 
-# 2. Initialize tools
-app = FastAPI()
+# ----------------- Initialization ----------------- #
+router = APIRouter()
 nlp = spacy.load("en_core_web_sm")
 grammar_tool = language_tool_python.LanguageTool("en-US")
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-# 3. CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True,
-    allow_methods=["POST"],
-    allow_headers=["*"],
-)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# 4. Skills
-# 4. Skills
+# ----------------- Skill Setup ----------------- #
 SKILL_LIST = [
     "python", "java", "c++", "javascript", "react", "node.js", "angular",
     "html", "css", "sql", "mongodb", "mysql", "postgresql",
@@ -36,16 +27,11 @@ SKILL_LIST = [
     "autocad", "solidworks", "ansys", "matlab", "catia",
     "illustrator", "photoshop", "figma", "xd", "sketch"
 ]
-  # ⬅️ Add your existing skills list here
 skill_patterns = [nlp.make_doc(skill.lower()) for skill in SKILL_LIST]
 matcher = PhraseMatcher(nlp.vocab, attr="LOWER")
 matcher.add("SKILLS", skill_patterns)
 
-# 5. Logger
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# ------------------- Utility Functions ------------------- #
+# ----------------- Utility Functions ----------------- #
 def validate_file(file: UploadFile):
     mime = Magic(mime=True)
     file.file.seek(0)
@@ -145,7 +131,7 @@ def extract_entities(doc):
 def summarize_text(doc, max_points=5):
     return [sent.text.strip() for sent in doc.sents if len(sent.text.split()) > 8][:max_points]
 
-# ------------------- Analyzer Core ------------------- #
+# ------------------- Core Resume Analyzer ------------------- #
 async def analyze_text(text, required_skills):
     loop = asyncio.get_event_loop()
     doc = await loop.run_in_executor(None, nlp, text)
@@ -174,9 +160,9 @@ async def analyze_text(text, required_skills):
     }
 
 # ------------------- API Endpoint ------------------- #
-@app.post("/analyze-resume")
+@router.post("/analyze-resume")
 async def analyze_resume(
-    file: UploadFile = File(..., max_size=15*1024*1024),
+    file: UploadFile = File(...),
     required_skills: List[str] = Form(default=[])
 ):
     logger.info(f"Received file: {file.filename}")

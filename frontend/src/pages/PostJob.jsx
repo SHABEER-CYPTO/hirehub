@@ -1,13 +1,15 @@
 import React, { useState } from "react";
+import { useAuth } from "../components/auth/AuthContext";
 
 const PostJob = () => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     salary: "",
     experience: "",
     location: "",
-    type: "full-time",
+    type: "full-time", // ✅ uses hyphen
   });
 
   const [successMsg, setSuccessMsg] = useState("");
@@ -19,23 +21,47 @@ const PostJob = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // TODO: Send data to backend API
-    console.log("Submitting Job:", formData);
-    setSuccessMsg("Job posted successfully!");
-    setFormData({
-      title: "",
-      description: "",
-      salary: "",
-      experience: "",
-      location: "",
-      type: "full-time",
-    });
+    if (!user || user.role !== "employer") {
+      alert("❌ You must be logged in as an employer.");
+      return;
+    }
 
-    // clear success message after 3s
-    setTimeout(() => setSuccessMsg(""), 3000);
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL || "http://localhost:8000"}/api/jobs`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...formData,
+            employer_id: user.id,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) throw new Error(result.detail || "Failed to post job.");
+
+      setSuccessMsg("✅ Job posted successfully!");
+      setFormData({
+        title: "",
+        description: "",
+        salary: "",
+        experience: "",
+        location: "",
+        type: "full-time",
+      });
+
+      setTimeout(() => setSuccessMsg(""), 3000);
+    } catch (err) {
+      alert(`❌ ${err.message}`);
+    }
   };
 
   return (

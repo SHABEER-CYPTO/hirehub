@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import jobsData from "../data/jobsData";
+import jobsData from "../data/jobsData"; // ✅ Replace with API later
+import { useAuth } from "../components/auth/AuthContext"; // ✅ Make sure this exists
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
+  const { user } = useAuth(); // ✅ Get current user (with role)
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Simulate data fetch — replace with real API when ready
     setTimeout(() => {
       setJobs(jobsData);
     }, 1000);
@@ -19,13 +22,17 @@ const Jobs = () => {
   return (
     <div className="ml-[250px] p-6">
       <h1 className="text-3xl font-bold text-gray-800 mb-2">Job Listings</h1>
-      <button
-        onClick={() => navigate("/post-job")}
-        className="bg-violet-600 text-white px-4 py-2 rounded mb-6 hover:bg-violet-700"
-        aria-label="Post a new job"
-      >
-        ➕ Post a Job
-      </button>
+
+      {/* ✅ Show only for employers */}
+      {user?.role === "employer" && (
+        <button
+          onClick={() => navigate("/post-job")}
+          className="bg-violet-600 text-white px-4 py-2 rounded mb-6 hover:bg-violet-700"
+        >
+          ➕ Post a Job
+        </button>
+      )}
+
       <p className="text-gray-600 mb-6">Find your next opportunity below:</p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -38,13 +45,16 @@ const Jobs = () => {
               <p><strong>Company:</strong> {job.company}</p>
               <p><strong>Location:</strong> {job.location}</p>
               <p><strong>Type:</strong> {job.type}</p>
-              <button
-                onClick={() => handleApply(job)}
-                className="bg-violet-600 text-white px-4 py-2 mt-4 rounded hover:bg-violet-700"
-                aria-label={`Apply for ${job.title} at ${job.company}`}
-              >
-                Apply Now
-              </button>
+
+              {/* ✅ Only jobseekers can apply */}
+              {user?.role === "jobseeker" && (
+                <button
+                  onClick={() => handleApply(job)}
+                  className="bg-violet-600 text-white px-4 py-2 mt-4 rounded hover:bg-violet-700"
+                >
+                  Apply Now
+                </button>
+              )}
             </div>
           ))
         )}

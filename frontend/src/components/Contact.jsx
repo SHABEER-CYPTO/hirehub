@@ -4,7 +4,7 @@ const Contact = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-20">
+      <section className="bg-gradient-to-r from-[#00b0f3] via-[#75cfea] to-[#DEF0FC] text-white py-20">
         <div className="container mx-auto px-6 text-center">
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4 animate-fadeIn">
             Contact Us

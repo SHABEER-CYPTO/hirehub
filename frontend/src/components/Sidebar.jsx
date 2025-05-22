@@ -31,13 +31,13 @@ const Sidebar = () => {
     <div
       style={{
         width: isCollapsed ? "80px" : "200px",
-        background: "linear-gradient(180deg, #2a1d3f 0%, #3e2d5d 100%)",
+        backgroundColor: "#ffffff",
         height: "100vh",
-        color: "#ffffff",
+        color: "#3730a3",
         transition: "width 0.3s ease",
         padding: isCollapsed ? "24px 8px" : "24px 16px",
         position: "fixed",
-        boxShadow: "2px 0 20px rgba(0, 0, 0, 0.2)",
+        boxShadow: "2px 0 20px rgba(0, 0, 0, 0.1)",
         overflowX: "hidden",
         zIndex: 50,
       }}
@@ -48,7 +48,7 @@ const Sidebar = () => {
         style={{
           background: "none",
           border: "none",
-          color: "#e0d4ff",
+          color: "#3730a3",
           cursor: "pointer",
           fontSize: "24px",
           marginBottom: "32px",
@@ -57,7 +57,7 @@ const Sidebar = () => {
           transition: "all 0.2s ease",
         }}
         onMouseEnter={(e) =>
-          (e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)")
+          (e.currentTarget.style.background = "rgba(55, 48, 163, 0.1)")
         }
         onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
       >
@@ -78,113 +78,35 @@ const Sidebar = () => {
         {/* Job Seeker Links */}
         {user.role === "jobseeker" && (
           <>
-            <SidebarItem
-              to="/jobs"
-              icon={<Briefcase size={20} />}
-              text="Job Listings"
-              isCollapsed={isCollapsed}
-              active={location.pathname === "/jobs"}
-            />
-            <SidebarItem
-              to="/applications"
-              icon={<User size={20} />}
-              text="Applications"
-              isCollapsed={isCollapsed}
-              active={location.pathname === "/applications"}
-            />
-            <SidebarItem
-              to="/saved-jobs"
-              icon={<BookmarkCheck size={20} />}
-              text="Saved Jobs"
-              isCollapsed={isCollapsed}
-              active={location.pathname === "/saved-jobs"}
-            />
-            <SidebarItem
-              to="/resume-analyzer"
-              icon={<Cpu size={20} />}
-              text="Resume Analyzer"
-              isCollapsed={isCollapsed}
-              active={location.pathname === "/resume-analyzer"}
-            />
-            <SidebarItem
-              to="/notifications"
-              icon={<Bell size={20} />}
-              text="Notifications"
-              isCollapsed={isCollapsed}
-              active={location.pathname === "/notifications"}
-            />
+            <SidebarItem to="/jobs" icon={<Briefcase size={20} />} text="Job Listings" isCollapsed={isCollapsed} active={location.pathname === "/jobs"} />
+            <SidebarItem to="/applications" icon={<User size={20} />} text="Applications" isCollapsed={isCollapsed} active={location.pathname === "/applications"} />
+            <SidebarItem to="/saved-jobs" icon={<BookmarkCheck size={20} />} text="Saved Jobs" isCollapsed={isCollapsed} active={location.pathname === "/saved-jobs"} />
+            <SidebarItem to="/resume-analyzer" icon={<Cpu size={20} />} text="Resume Analyzer" isCollapsed={isCollapsed} active={location.pathname === "/resume-analyzer"} />
+            <SidebarItem to="/notifications" icon={<Bell size={20} />} text="Notifications" isCollapsed={isCollapsed} active={location.pathname === "/notifications"} />
           </>
         )}
 
         {/* Employer Links */}
         {user.role === "employer" && (
           <>
-            <SidebarItem
-              to="/post-job"
-              icon={<Briefcase size={20} />}
-              text="Post a Job"
-              isCollapsed={isCollapsed}
-              active={location.pathname === "/post-job"}
-            />
-            <SidebarItem
-              to="/my-jobs"
-              icon={<LayoutDashboard size={20} />}
-              text="My Job Listings"
-              isCollapsed={isCollapsed}
-              active={location.pathname === "/my-jobs"}
-            />
-            <SidebarItem
-              to="/applications"
-              icon={<User size={20} />}
-              text="Applicants"
-              isCollapsed={isCollapsed}
-              active={location.pathname === "/applications"}
-            />
-            <SidebarItem
-              to="/messages"
-              icon={<Bell size={20} />}
-              text="Messages"
-              isCollapsed={isCollapsed}
-              active={location.pathname === "/messages"}
-            />
-            <SidebarItem
-              to="/candidates"
-              icon={<Bell size={20} />}
-              text="Filter Candidates"
-              isCollapsed={isCollapsed}
-              active={location.pathname === "/candidates"}
-            />
+            <SidebarItem to="/post-job" icon={<Briefcase size={20} />} text="Post a Job" isCollapsed={isCollapsed} active={location.pathname === "/post-job"} />
+            <SidebarItem to="/my-jobs" icon={<Briefcase size={20} />} text="My Jobs" isCollapsed={isCollapsed} active={location.pathname === "/my-jobs"} />
+            <SidebarItem to="/applications" icon={<User size={20} />} text="Applicants" isCollapsed={isCollapsed} active={location.pathname === "/applications"} />
+            <SidebarItem to="/messages" icon={<Bell size={20} />} text="Messages" isCollapsed={isCollapsed} active={location.pathname === "/messages"} />
+            <SidebarItem to="/candidates" icon={<Bell size={20} />} text="Filter Candidates" isCollapsed={isCollapsed} active={location.pathname === "/candidates"} />
           </>
         )}
 
         {/* Admin Links */}
         {user.role === "admin" && (
           <>
-            <SidebarItem
-              to="/admin-dashboard"
-              icon={<LayoutDashboard size={20} />}
-              text="Admin Dashboard"
-              isCollapsed={isCollapsed}
-              active={location.pathname === "/admin-dashboard"}
-            />
-            <SidebarItem
-              to="/users"
-              icon={<User size={20} />}
-              text="Manage Users"
-              isCollapsed={isCollapsed}
-              active={location.pathname === "/users"}
-            />
+            <SidebarItem to="/admin-dashboard" icon={<LayoutDashboard size={20} />} text="Admin Dashboard" isCollapsed={isCollapsed} active={location.pathname === "/admin-dashboard"} />
+            <SidebarItem to="/users" icon={<User size={20} />} text="Manage Users" isCollapsed={isCollapsed} active={location.pathname === "/users"} />
           </>
         )}
 
         {/* Profile for All */}
-        <SidebarItem
-          to="/profile"
-          icon={<User size={20} />}
-          text="Profile"
-          isCollapsed={isCollapsed}
-          active={location.pathname === "/profile"}
-        />
+        <SidebarItem to="/profile" icon={<User size={20} />} text="Profile" isCollapsed={isCollapsed} active={location.pathname === "/profile"} />
 
         {/* Logout Button */}
         <button
@@ -194,7 +116,7 @@ const Sidebar = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: isCollapsed ? "center" : "flex-start",
-            color: "#ffb3b3",
+            color: "#b91c1c",
             background: "transparent",
             border: "none",
             padding: isCollapsed ? "12px" : "12px 16px",
@@ -203,25 +125,13 @@ const Sidebar = () => {
             transition: "all 0.3s ease",
             marginTop: "auto",
           }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.background = "transparent")
-          }
+          onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
         >
-          <span
-            style={{
-              marginRight: isCollapsed ? "0" : "12px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
+          <span style={{ marginRight: isCollapsed ? "0" : "12px", display: "flex", alignItems: "center" }}>
             <LogOut size={20} />
           </span>
-          {!isCollapsed && (
-            <span style={{ fontSize: "15px", fontWeight: 500 }}>Logout</span>
-          )}
+          {!isCollapsed && <span style={{ fontSize: "15px", fontWeight: 500 }}>Logout</span>}
         </button>
       </nav>
     </div>
@@ -237,42 +147,30 @@ const SidebarItem = ({ to, icon, text, isCollapsed, active }) => (
       alignItems: "center",
       justifyContent: isCollapsed ? "center" : "flex-start",
       textDecoration: "none",
-      color: active ? "#fff" : "rgba(255, 255, 255, 0.85)",
+      color: active ? "#ffffff" : "#3730a3",
       padding: isCollapsed ? "12px" : "12px 16px",
       borderRadius: "10px",
       marginBottom: "4px",
       transition: "all 0.3s ease",
-      background: active
-        ? "linear-gradient(90deg, #7c3aed 0%, #5b21b6 100%)"
-        : "transparent",
-      boxShadow: active ? "0 4px 14px rgba(124, 58, 237, 0.2)" : "none",
+      background: active ? "#3730a3" : "transparent",
+      boxShadow: active ? "0 4px 14px rgba(55, 48, 163, 0.2)" : "none",
       whiteSpace: "nowrap",
     }}
     onMouseEnter={(e) => {
       if (!active) {
-        e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
-        e.currentTarget.style.color = "#fff";
+        e.currentTarget.style.background = "rgba(55, 48, 163, 0.05)";
+        e.currentTarget.style.color = "#3730a3";
       }
     }}
     onMouseLeave={(e) => {
       if (!active) {
         e.currentTarget.style.background = "transparent";
-        e.currentTarget.style.color = "rgba(255, 255, 255, 0.85)";
+        e.currentTarget.style.color = "#3730a3";
       }
     }}
   >
-    <span
-      style={{
-        marginRight: isCollapsed ? "0" : "12px",
-        display: "flex",
-        alignItems: "center",
-      }}
-    >
-      {icon}
-    </span>
-    {!isCollapsed && (
-      <span style={{ fontSize: "15px", fontWeight: 500 }}>{text}</span>
-    )}
+    <span style={{ marginRight: isCollapsed ? "0" : "12px", display: "flex", alignItems: "center" }}>{icon}</span>
+    {!isCollapsed && <span style={{ fontSize: "15px", fontWeight: 500 }}>{text}</span>}
   </Link>
 );
 

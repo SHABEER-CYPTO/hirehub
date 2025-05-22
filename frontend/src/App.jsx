@@ -23,13 +23,15 @@ import JobSeekerDashboard from "./pages/JobSeekerDashboard";
 import Jobs from "./pages/Jobs";
 import ApplyJob from "./pages/ApplyJob";
 import PostJob from "./pages/PostJob";
-import MyJobs from "./pages/MyJobs"; // ✅ New import
+import MyJobs from "./pages/MyJobs";
 import Applications from "./pages/Applications";
 import Profile from "./pages/Profile";
 import ResumeAnalyzer from "./pages/ResumeAnalyzer";
 import Messages from "./pages/Messages";
 import SavedJobs from "./pages/SavedJobs";
 import Candidates from "./pages/Candidates";
+import EditJob from "./pages/EditJob";
+import Notifications from "./pages/Notifications";
 
 
 // Route Guard
@@ -97,6 +99,14 @@ const App = () => {
             }
           />
           <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute role="jobseeker">
+                <Notifications />
+              </ProtectedRoute>
+            }
+          />          
+          <Route
             path="/saved-jobs"
             element={
               <ProtectedRoute role="jobseeker">
@@ -131,7 +141,7 @@ const App = () => {
           <Route
             path="/applications"
             element={
-              <ProtectedRoute role="employer">
+              <ProtectedRoute>
                 <Applications />
               </ProtectedRoute>
             }
@@ -150,6 +160,14 @@ const App = () => {
               <ProtectedRoute role="jobseeker">
                 <ResumeAnalyzer />
               </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/edit-job/:jobId"
+            element={
+                <ProtectedRoute role="employer">
+                  <EditJob />
+                </ProtectedRoute>
             }
           />
           <Route

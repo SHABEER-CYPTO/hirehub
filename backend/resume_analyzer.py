@@ -9,7 +9,6 @@ import asyncio
 from spacy.matcher import PhraseMatcher
 from sentence_transformers import SentenceTransformer, util
 
-# ----------------- Initialization ----------------- #
 router = APIRouter()
 nlp = spacy.load("en_core_web_sm")
 grammar_tool = language_tool_python.LanguageTool("en-US")
@@ -18,20 +17,88 @@ model = SentenceTransformer("all-MiniLM-L6-v2")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ----------------- Skill Setup ----------------- #
+# ----------------- Skills -----------------
 SKILL_LIST = [
-    "python", "java", "c++", "javascript", "react", "node.js", "angular",
-    "html", "css", "sql", "mongodb", "mysql", "postgresql",
-    "aws", "azure", "docker", "kubernetes", "git", "github",
-    "machine learning", "deep learning", "data science",
-    "autocad", "solidworks", "ansys", "matlab", "catia",
-    "illustrator", "photoshop", "figma", "xd", "sketch"
+    # Programming Languages
+    "python", "java", "c++", "javascript", "react", "node.js", "angular", 
+    "html", "css", "sql", "mongodb", "mysql", "postgresql", "go", "ruby", "swift", 
+    "kotlin", "typescript", "php", "rust", "scala", "perl", "r", "matlab", "bash", "shell scripting", 
+
+    # Web Development
+    "html5", "css3", "javascript", "react", "angular", "vue.js", "node.js", "express", "redux", 
+    "graphql", "websockets", "bootstrap", "tailwind", "sass", "webpack", "gulp", "grunt", "npm", "yarn",
+
+    # Databases and Cloud
+    "mongodb", "mysql", "postgresql", "oracle", "redis", "firebase", "aws", "azure", "google cloud", 
+    "docker", "kubernetes", "terraform", "docker-compose", "git", "github", "gitlab", "bitbucket",
+
+    # DevOps and CI/CD
+    "jenkins", "circleci", "travisci", "ansible", "puppet", "chef", "saltstack", "vagrant", "kubernetes", 
+    "docker", "gitlab ci", "azure devops", "aws codepipeline",
+
+    # Data Science / AI / Machine Learning
+    "machine learning", "deep learning", "data science", "tensorflow", "keras", "pytorch", "scikit-learn", 
+    "pandas", "numpy", "matplotlib", "seaborn", "xgboost", "lightgbm", "nlp", "neural networks", 
+    "reinforcement learning", "computer vision", "opencv", "speech recognition", "big data", "hadoop", 
+    "spark", "apache flink", "data engineering", "apache kafka",
+
+    # Mobile Development
+    "android", "ios", "flutter", "react native", "swift", "objective-c", "kotlin", "xcode", "android studio",
+
+    # UI/UX Design
+    "figma", "sketch", "adobe xd", "photoshop", "illustrator", "invision", "canva", "mockups", "wireframing", 
+    "prototyping", "user research", "usability testing", "user flows", "responsive design", "interaction design", 
+    "UI design", "UX design",
+
+    # Software Engineering
+    "agile", "scrum", "kanban", "waterfall", "test-driven development", "pair programming", "continuous integration", 
+    "unit testing", "e2e testing", "selenium", "cypress", "pytest", "junit", "selenium", "mocking", "swagger", "rest api",
+
+    # Business and Marketing
+    "digital marketing", "seo", "social media", "content marketing", "email marketing", "affiliate marketing", 
+    "google analytics", "facebook ads", "adwords", "hubspot", "salesforce", "crm", "e-commerce", "market research",
+    "lead generation", "growth hacking",
+
+    # Other Technical Skills
+    "autocad", "solidworks", "ansys", "matlab", "catia", "arduino", "raspberry pi", "circuit design", "electronics", 
+    "robotics", "blockchain", "ethereum", "hyperledger", "solidity", "security", "penetration testing", "nmap", "metasploit",
+    "ethical hacking", "linux", "unix", "macos", "windows", "bash", "python scripting", "networking", "cloud security", 
+    "penetration testing", "malware analysis", "reverse engineering",
+
+    # Soft Skills
+    "leadership", "communication", "teamwork", "problem solving", "critical thinking", "time management", 
+    "adaptability", "creativity", "negotiation", "conflict resolution", "project management", "decision making",
+    "mentorship", "empathy", "public speaking", "presentation skills"
 ]
+
 skill_patterns = [nlp.make_doc(skill.lower()) for skill in SKILL_LIST]
 matcher = PhraseMatcher(nlp.vocab, attr="LOWER")
 matcher.add("SKILLS", skill_patterns)
 
-# ----------------- Utility Functions ----------------- #
+# ----------------- ML-based Domain Classifier -----------------
+DOMAIN_LABELS = {
+    "Software Developer": ["python", "react", "full stack", "javascript", "node.js"],
+    "Mechanical Engineer": ["autocad", "solidworks", "mechanical", "catia"],
+    "Healthcare": ["nursing", "pharmacy", "hospital", "clinic"],
+    "UI/UX Designer": ["figma", "illustrator", "xd", "design"],
+    "Data Scientist": ["machine learning", "data science", "statistics", "pandas"]
+}
+
+def classify_resume_domain_ml(text):
+    text_embedding = model.encode(text, convert_to_tensor=True)
+    best_domain = "General"
+    best_score = 0.0
+
+    for domain, keywords in DOMAIN_LABELS.items():
+        domain_embedding = model.encode(" ".join(keywords), convert_to_tensor=True)
+        score = util.cos_sim(text_embedding, domain_embedding).item()
+        if score > best_score:
+            best_score = score
+            best_domain = domain
+
+    return best_domain
+
+# ----------------- Utilities -----------------
 def validate_file(file: UploadFile):
     mime = Magic(mime=True)
     file.file.seek(0)
@@ -97,19 +164,6 @@ def check_grammar(text):
     matches = grammar_tool.check(text)
     return max(25 - len(matches) * 2, 0)
 
-def classify_resume_domain(text):
-    text = text.lower()
-    if "javascript" in text or "react" in text or "python" in text:
-        return "Software Developer"
-    elif "autocad" in text or "mechanical" in text:
-        return "Mechanical Engineer"
-    elif "nursing" in text or "pharmacy" in text:
-        return "Healthcare"
-    elif "illustrator" in text or "figma" in text:
-        return "UI/UX Designer"
-    else:
-        return "General"
-
 def extract_entities(doc):
     entities = {"name": None, "email": None, "phone": None, "location": None, "education": [], "companies": []}
     email_match = re.search(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[a-z]{2,}\b", doc.text)
@@ -131,7 +185,7 @@ def extract_entities(doc):
 def summarize_text(doc, max_points=5):
     return [sent.text.strip() for sent in doc.sents if len(sent.text.split()) > 8][:max_points]
 
-# ------------------- Core Resume Analyzer ------------------- #
+# ------------------- Core Analyzer ------------------- #
 async def analyze_text(text, required_skills):
     loop = asyncio.get_event_loop()
     doc = await loop.run_in_executor(None, nlp, text)
@@ -139,7 +193,7 @@ async def analyze_text(text, required_skills):
     skills = extract_skills(doc)
     match_score = calculate_match_score(skills, required_skills)
     semantic_skills, semantic_score = semantic_match(text, required_skills)
-    domain = classify_resume_domain(text)
+    domain = classify_resume_domain_ml(text)
 
     length_score = min(len(text.split()) / 500 * 25, 25)
     skills_score = len(skills) / len(SKILL_LIST) * 50
@@ -151,6 +205,7 @@ async def analyze_text(text, required_skills):
         "skills_score": round(skills_score, 1),
         "grammar_score": round(grammar_score, 1),
         "skills_found": skills,
+        "required_skills": required_skills,  # ✅ Newly added
         "match_score": match_score,
         "semantic_skills_matched": semantic_skills,
         "semantic_match_score": semantic_score,
@@ -159,7 +214,7 @@ async def analyze_text(text, required_skills):
         "summary_points": summarize_text(doc)
     }
 
-# ------------------- API Endpoint ------------------- #
+# ------------------- Endpoint ------------------- #
 @router.post("/analyze-resume")
 async def analyze_resume(
     file: UploadFile = File(...),

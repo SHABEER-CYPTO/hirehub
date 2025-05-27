@@ -1,18 +1,30 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, Query, Path
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query, Path
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from database import get_db
-from models import ApplicationModel
+from models import ApplicationModel, JobModel, UserModel
 from pydantic import BaseModel
-import shutil
 import os
+import shutil
 
 router = APIRouter()
-
 UPLOAD_DIR = "uploads/resumes"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# ✅ Pydantic schema for response
+# Schemas for output
+class JobBrief(BaseModel):
+    id: int
+    title: str
+    class Config:
+        from_attributes = True
+
+class ApplicantBrief(BaseModel):
+    id: int
+    name: str
+    email: str
+    class Config:
+        from_attributes = True
+
 class ApplicationOut(BaseModel):
     id: int
     job_id: int
@@ -20,11 +32,12 @@ class ApplicationOut(BaseModel):
     cover_letter: str
     resume_path: str
     status: str
-
+    job: Optional[JobBrief]
+    jobseeker: Optional[ApplicantBrief]
     class Config:
         from_attributes = True
 
-# ✅ POST /api/applications
+# Submit application
 @router.post("/applications")
 async def submit_application(
     job_id: int = Form(...),
@@ -34,14 +47,11 @@ async def submit_application(
     db: Session = Depends(get_db)
 ):
     try:
-        # Save resume to disk
         filename = f"{jobseeker_id}_{job_id}_{resume.filename}"
         file_path = os.path.join(UPLOAD_DIR, filename)
-
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(resume.file, buffer)
 
-        # Insert into DB
         new_app = ApplicationModel(
             job_id=job_id,
             jobseeker_id=jobseeker_id,
@@ -57,34 +67,33 @@ async def submit_application(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-# ✅ GET /api/applications?jobseeker_id=...
+# Get applications (filtered by jobseeker or employer)
 @router.get("/applications", response_model=List[ApplicationOut])
 def get_applications(
     jobseeker_id: Optional[int] = Query(None),
+    employer_id: Optional[int] = Query(None),
     db: Session = Depends(get_db)
 ):
-    try:
-        if jobseeker_id:
-            return db.query(ApplicationModel).filter(ApplicationModel.jobseeker_id == jobseeker_id).all()
-        return db.query(ApplicationModel).all()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    query = db.query(ApplicationModel).options(
+        joinedload(ApplicationModel.job),
+        joinedload(ApplicationModel.jobseeker)
+    )
+    if jobseeker_id:
+        query = query.filter(ApplicationModel.jobseeker_id == jobseeker_id)
+    if employer_id:
+        query = query.join(ApplicationModel.job).filter(JobModel.employer_id == employer_id)
+    return query.all()
 
-
-# ✅ PUT /api/applications/{id}/status
+# Update application status
 @router.put("/applications/{application_id}/status")
 def update_application_status(
-    application_id: int = Path(...),
-    new_status: str = Form(...),  # e.g., "Accepted", "Rejected"
+    application_id: int,
+    new_status: str = Form(...),
     db: Session = Depends(get_db)
 ):
     app = db.query(ApplicationModel).filter(ApplicationModel.id == application_id).first()
     if not app:
         raise HTTPException(status_code=404, detail="Application not found")
-
     app.status = new_status
     db.commit()
-    db.refresh(app)
-
-    return {"success": True, "message": "Application status updated.", "application": app}
+    return {"success": True, "message": "Application status updated", "status": app.status}

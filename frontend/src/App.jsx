@@ -29,9 +29,9 @@ import Profile from "./pages/Profile";
 import ResumeAnalyzer from "./pages/ResumeAnalyzer";
 import Messages from "./pages/Messages";
 import SavedJobs from "./pages/SavedJobs";
-import Candidates from "./pages/Candidates";
 import EditJob from "./pages/EditJob";
 import Notifications from "./pages/Notifications";
+import ViewApplications from "./pages/ViewApplications";
 
 
 // Route Guard
@@ -123,21 +123,21 @@ const App = () => {
             }
           />
           <Route
+            path="/employer-applications"
+            element={
+              <ProtectedRoute role="employer">
+                <ViewApplications />
+              </ProtectedRoute>
+            }
+          />                
+          <Route
             path="/my-jobs"
             element={
               <ProtectedRoute role="employer">
                 <MyJobs />
               </ProtectedRoute>
             }
-          />
-          <Route
-            path="/Candidates"
-            element={
-              <ProtectedRoute role="employer">
-                <Candidates />
-              </ProtectedRoute>
-            }
-          />          
+          />       
           <Route
             path="/applications"
             element={

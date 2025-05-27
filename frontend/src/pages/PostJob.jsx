@@ -9,10 +9,12 @@ const PostJob = () => {
     salary: "",
     experience: "",
     location: "",
-    type: "full-time", // ✅ uses hyphen
+    type: "full-time", // Default value
+    skills: "", // New field to store comma-separated skills
   });
 
   const [successMsg, setSuccessMsg] = useState("");
+  const [loading, setLoading] = useState(false); // Added loading state
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -29,6 +31,7 @@ const PostJob = () => {
       return;
     }
 
+    setLoading(true); // Show loading indicator
     try {
       const response = await fetch(
         `${process.env.REACT_APP_API_URL || "http://localhost:8000"}/api/jobs`,
@@ -40,6 +43,7 @@ const PostJob = () => {
           body: JSON.stringify({
             ...formData,
             employer_id: user.id,
+            skills: formData.skills.split(",").map(skill => skill.trim()) // Convert comma-separated skills to an array
           }),
         }
       );
@@ -56,11 +60,14 @@ const PostJob = () => {
         experience: "",
         location: "",
         type: "full-time",
+        skills: "", // Clear skills field
       });
 
-      setTimeout(() => setSuccessMsg(""), 3000);
+      setTimeout(() => setSuccessMsg(""), 3000); // Clear success message after 3 seconds
     } catch (err) {
       alert(`❌ ${err.message}`);
+    } finally {
+      setLoading(false); // Hide loading indicator after request is completed
     }
   };
 
@@ -152,13 +159,28 @@ const PostJob = () => {
               <option value="remote">Remote</option>
             </select>
           </div>
+
+          {/* Skills Field */}
+          <div>
+            <label className="block mb-1 font-medium">Skills</label>
+            <input
+              name="skills"
+              value={formData.skills}
+              onChange={handleChange}
+              required
+              placeholder="Enter skills, separated by commas"
+              className="w-full border px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <small className="text-gray-500">E.g., Autocad, Solidworks, Project Management</small>
+          </div>
         </div>
 
         <button
           type="submit"
-          className="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition"
+          className="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition disabled:opacity-50"
+          disabled={loading} // Disable button while loading
         >
-          Post Job
+          {loading ? "Posting..." : "Post Job"} {/* Loading state text */}
         </button>
       </form>
     </div>

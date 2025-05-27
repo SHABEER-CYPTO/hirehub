@@ -12,11 +12,10 @@ const Notifications = () => {
         const res = await fetch(`http://localhost:8000/api/applications?jobseeker_id=${user.id}`);
         const data = await res.json();
 
-        // 🛡 Ensure it's always an array
         if (Array.isArray(data)) {
-          setNotifications(data.filter(app => app.status !== "Pending")); // Only show reviewed apps
+          setNotifications(data.filter(app => app.status !== "Pending"));
         } else {
-          setNotifications([]); // fallback if backend gives unexpected response
+          setNotifications([]);
           console.warn("Unexpected notifications format:", data);
         }
       } catch (error) {
@@ -45,8 +44,18 @@ const Notifications = () => {
           {notifications.map((notif) => (
             <li key={notif.id} className="p-4 bg-white shadow rounded">
               <p>
-                Your application for <strong>Job #{notif.job_id}</strong> was{" "}
-                <span className="font-semibold text-purple-600">{notif.status}</span>.
+                Your application for <strong>{notif.job?.title || `Job #${notif.job_id}`}</strong>{" "}
+                was <span
+                       className={`font-semibold ${
+                         notif.status === "Accepted"
+                           ? "text-green-600"
+                           : notif.status === "Rejected"
+                           ? "text-red-600"
+                           : "text-yellow-600"
+                      }`}
+                    >
+                      {notif.status}
+                    </span>
               </p>
               <a
                 href={`http://localhost:8000/${notif.resume_path}`}

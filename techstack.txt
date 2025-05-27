@@ -1,0 +1,10 @@
+ TECH STACK
+Frontend: React + Tailwind + Framer Motion
+
+Backend: FastAPI (job mgmt, resume analysis, chat)
+
+Auth/Login: PHP with JWT (legacy-compatible)
+
+Database: MySQL
+
+Resume Parsing: spaCy + PDF/Image parser

@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends, Query, HTTPException, Path
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Literal
 from database import get_db
 from models import JobModel
 from pydantic import BaseModel
-from typing import Literal
 
 router = APIRouter()
 
@@ -17,6 +16,7 @@ class JobCreate(BaseModel):
     location: str
     type: Literal["full-time", "part-time", "internship", "contract", "remote"]
     employer_id: int
+    skills: List[str]
 
 # Pydantic schema for updating a job
 class JobUpdate(BaseModel):
@@ -26,6 +26,7 @@ class JobUpdate(BaseModel):
     experience: Optional[int]
     location: Optional[str]
     type: Optional[Literal["full-time", "part-time", "internship", "contract", "remote"]]
+    skills: Optional[List[str]]
 
 # Pydantic schema for response
 class JobResponse(BaseModel):
@@ -37,16 +38,18 @@ class JobResponse(BaseModel):
     location: str
     type: str
     employer_id: int
+    skills: List[str]  # ✅ Include skills
 
     class Config:
-        from_attributes = True  # Use from_attributes instead of orm_mode in Pydantic v2
+        from_attributes = True
 
 # ✅ GET /api/jobs?employer_id=123
 @router.get("/jobs", response_model=List[JobResponse])
 def get_jobs(employer_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
+    query = db.query(JobModel)
     if employer_id:
-        return db.query(JobModel).filter(JobModel.employer_id == employer_id).all()
-    return db.query(JobModel).all()
+        query = query.filter(JobModel.employer_id == employer_id)
+    return query.all()
 
 # ✅ POST /api/jobs
 @router.post("/jobs", response_model=JobResponse)

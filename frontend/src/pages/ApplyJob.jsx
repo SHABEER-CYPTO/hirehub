@@ -1,4 +1,3 @@
-// src/pages/ApplyJob.jsx
 import React, { useState } from "react";
 import { useLocation, Navigate } from "react-router-dom";
 import { useAuth } from "../components/auth/AuthContext";
@@ -8,11 +7,8 @@ const ApplyJob = () => {
   const location = useLocation();
   const job = location.state?.job;
 
-  const [formData, setFormData] = useState({
-    cover_letter: "",
-    resume_url: "",
-  });
-
+  const [coverLetter, setCoverLetter] = useState("");
+  const [resumeFile, setResumeFile] = useState(null);
   const [status, setStatus] = useState(null);
 
   if (!user || user.role !== "jobseeker") {
@@ -23,68 +19,68 @@ const ApplyJob = () => {
     return <p>No job selected. Please go back and choose a job to apply for.</p>;
   }
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!resumeFile) {
+      setStatus("⚠️ Please upload a resume file.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("job_id", job.id);
+    formData.append("jobseeker_id", user.id);
+    formData.append("cover_letter", coverLetter);
+    formData.append("resume", resumeFile);
+
     try {
       const response = await fetch("http://localhost:8000/api/applications", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`,
-        },
-        body: JSON.stringify({
-          job_id: job.id,
-          cover_letter: formData.cover_letter,
-          resume_url: formData.resume_url,
-        }),
+        body: formData,
       });
 
       if (response.ok) {
-        setStatus("Application submitted successfully!");
+        setStatus("✅ Application submitted successfully!");
       } else {
         const errorData = await response.json();
-        setStatus(`Error: ${errorData.detail}`);
+        setStatus(`❌ Error: ${errorData.detail || "Failed to submit"}`);
       }
     } catch (error) {
-      setStatus("An error occurred while submitting the application.");
+      console.error("Error:", error);
+      setStatus("❌ An error occurred while submitting the application.");
     }
   };
 
   return (
     <div className="ml-[250px] p-6">
       <h1 className="text-2xl font-bold mb-4">Apply for {job.title}</h1>
-      <form onSubmit={handleSubmit} className="space-y-4 max-w-lg">
+      <form onSubmit={handleSubmit} className="space-y-6 max-w-lg">
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Cover Letter
           </label>
           <textarea
             name="cover_letter"
-            value={formData.cover_letter}
-            onChange={handleChange}
+            value={coverLetter}
+            onChange={(e) => setCoverLetter(e.target.value)}
+            rows={5}
             required
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
-            rows={5}
           />
         </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            Resume URL
+            Upload Resume (PDF/DOC)
           </label>
           <input
-            type="url"
-            name="resume_url"
-            value={formData.resume_url}
-            onChange={handleChange}
+            type="file"
+            accept=".pdf,.doc,.docx"
+            onChange={(e) => setResumeFile(e.target.files[0])}
             required
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
           />
         </div>
+
         <button
           type="submit"
           className="bg-violet-600 text-white px-4 py-2 rounded hover:bg-violet-700"
@@ -92,6 +88,7 @@ const ApplyJob = () => {
           Submit Application
         </button>
       </form>
+
       {status && <p className="mt-4 text-sm text-gray-600">{status}</p>}
     </div>
   );

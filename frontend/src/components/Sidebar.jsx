@@ -67,14 +67,8 @@ const Sidebar = () => {
       {/* Sidebar Links */}
       <nav style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         {/* Shared Dashboard */}
-        <SidebarItem
-          to="/dashboard"
-          icon={<LayoutDashboard size={20} />}
-          text="Dashboard"
-          isCollapsed={isCollapsed}
-          active={location.pathname === "/dashboard"}
-        />
-
+        {user.role !== "employer" && (
+            <SidebarItem to="/dashboard" icon={<LayoutDashboard size={20} />} text="Dashboard" isCollapsed={isCollapsed} active={location.pathname === "/dashboard"}/>)}
         {/* Job Seeker Links */}
         {user.role === "jobseeker" && (
           <>
@@ -91,9 +85,8 @@ const Sidebar = () => {
           <>
             <SidebarItem to="/post-job" icon={<Briefcase size={20} />} text="Post a Job" isCollapsed={isCollapsed} active={location.pathname === "/post-job"} />
             <SidebarItem to="/my-jobs" icon={<Briefcase size={20} />} text="My Jobs" isCollapsed={isCollapsed} active={location.pathname === "/my-jobs"} />
-            <SidebarItem to="/applications" icon={<User size={20} />} text="Applicants" isCollapsed={isCollapsed} active={location.pathname === "/applications"} />
+            <SidebarItem to="/employer-applications" icon={<User size={20} />} text="View Applicants" isCollapsed={isCollapsed} active={location.pathname === "/employer-applications"} />
             <SidebarItem to="/messages" icon={<Bell size={20} />} text="Messages" isCollapsed={isCollapsed} active={location.pathname === "/messages"} />
-            <SidebarItem to="/candidates" icon={<Bell size={20} />} text="Filter Candidates" isCollapsed={isCollapsed} active={location.pathname === "/candidates"} />
           </>
         )}
 
